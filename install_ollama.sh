@@ -26,7 +26,7 @@ service_systemctl() {
 choose_install_scope() {
   printf '%b[安装范围]%b 1) 当前用户安装（无需 sudo）  2) 系统级安装（需要 sudo，所有用户可用）\n' "$UI_CYAN" "$UI_RESET"
   local choice
-  choice=$(ask '请选择安装范围（默认1）' '1')
+  choice=$(ask '请选择安装范围' '1')
   case "$choice" in
     1) INSTALL_SCOPE='user' ;;
     2) INSTALL_SCOPE='system' ;;
@@ -198,7 +198,7 @@ choose_port() {
   fi
   while true; do
     printf '%b[端口]%b 1) 默认端口 11434  2) 随机可用端口  3) 自定义端口%s\n' "$UI_CYAN" "$UI_RESET" "$previous_option"
-    choice=$(ask '请选择端口方式（默认1）' "$default_choice")
+    choice=$(ask '请选择端口方式' "$default_choice")
     case "$choice" in
       1)
         OLLAMA_PORT='11434'
@@ -468,7 +468,7 @@ choose_gpu() {
   for gpu in "${GPUS[@]}"; do printf '  %s\n' "$gpu"; done
   printf '%b[GPU 选择]%b 输入逗号分隔的 GPU 编号（如 0,2），a=全部 GPU，c=强制 CPU\n' "$UI_CYAN" "$UI_RESET"
   local selection id found gpu gpu_index
-  selection=$(ask '请选择 GPU（默认全部）' 'a')
+  selection=$(ask '请选择 GPU' 'a')
   if [[ "$selection" =~ ^[Aa]$ ]]; then
     cuda_value=''
   elif [[ "$selection" =~ ^[Cc]$ ]]; then
@@ -493,7 +493,7 @@ choose_parallel() {
   info 'OLLAMA_NUM_PARALLEL 表示每个模型同时处理的最大请求数；数值越高并发吞吐可能越高，但会占用更多显存或内存。'
   printf '%b[并行数]%b 1) 1（默认）  2) 2  3) 4  4) 自定义\n' "$UI_CYAN" "$UI_RESET"
   local parallel_choice
-  parallel_choice=$(ask '请选择 OLLAMA_NUM_PARALLEL（默认1）' '1')
+  parallel_choice=$(ask '请选择 OLLAMA_NUM_PARALLEL' '1')
   case "$parallel_choice" in
     1) parallel_value='1' ;;
     2) parallel_value='2' ;;
@@ -510,7 +510,7 @@ choose_parallel() {
 
 show_current_settings
 printf '%b[操作]%b 1) 仅选择需要生效的 GPU  2) 仅设置 OLLAMA_NUM_PARALLEL  3) 同时配置两项\n' "$UI_CYAN" "$UI_RESET"
-operation=$(ask '请选择操作（默认1）' '1')
+operation=$(ask '请选择操作' '1')
 case "$operation" in
   1) choose_gpu ;;
   2) choose_parallel ;;
@@ -605,7 +605,7 @@ pick_random_port() {
 
 while true; do
   printf '%b[端口]%b 1) 默认端口 11434  2) 随机可用端口  3) 自定义端口\n' "$UI_CYAN" "$UI_RESET"
-  choice=$(ask '请选择端口方式（默认2）' '2')
+  choice=$(ask '请选择端口方式' '2')
   case "$choice" in
     1) NEW_PORT='11434' ;;
     2) NEW_PORT=$(pick_random_port) || die '尝试 10 次后仍未找到可用随机端口。' ;;
