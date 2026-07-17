@@ -162,6 +162,8 @@ ollama_gpu_select
 
 执行单项操作时会保留另一项的现有值；因此没有 NVIDIA GPU 或没有 `nvidia-smi` 时，也可以单独调整 `OLLAMA_NUM_PARALLEL`。
 
+选择 GPU 时会先显示当前所有可用 NVIDIA GPU 的编号、型号、GPU 利用率、显存已用/总量、显存占用率和 UUID。利用率是执行命令时由 `nvidia-smi` 获取的一次实时快照。
+
 `OLLAMA_NUM_PARALLEL` 表示每个模型能够同时处理的最大请求数，提供 `1`、`2`、`4` 和自定义 `1-128` 四种选择。默认值 `1` 最节省显存或内存；提高数值可能增加并发吞吐，但上下文缓存也会消耗更多资源，显存不足时应选择较小值。
 
 - 用户模式写入 `~/.config/systemd/user/ollama.service.d/gpu.conf`

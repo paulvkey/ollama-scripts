@@ -462,12 +462,40 @@ show_current_settings() {
 
 choose_gpu() {
   command -v nvidia-smi >/dev/null 2>&1 || die '未找到 nvidia-smi，无法执行 GPU 选择；仍可单独设置 OLLAMA_NUM_PARALLEL。'
-  mapfile -t GPUS < <(nvidia-smi --query-gpu=index,name,uuid --format=csv,noheader 2>/dev/null)
+  mapfile -t GPUS < <(nvidia-smi --query-gpu=index,uuid,utilization.gpu,memory.used,memory.total,name --format=csv,noheader,nounits 2>/dev/null)
   ((${#GPUS[@]} > 0)) || die '未检测到可用的 NVIDIA GPU。'
-  printf '%b[GPU 列表]%b\n' "$UI_CYAN" "$UI_RESET"
-  for gpu in "${GPUS[@]}"; do printf '  %s\n' "$gpu"; done
+  trim_field() {
+    local field=$1
+    field=${field#"${field%%[![:space:]]*}"}
+    field=${field%"${field##*[![:space:]]}"}
+    printf '%s' "$field"
+  }
+  printf '%b[GPU 实时状态]%b\n' "$UI_CYAN" "$UI_RESET"
+  printf '  %-4s %-28s %-10s %-23s %-10s %s\n' '编号' '型号' 'GPU占用' '显存使用' '显存占用' 'UUID'
+  local gpu index name uuid gpu_util memory_used memory_total memory_percent gpu_util_display memory_display
+  for gpu in "${GPUS[@]}"; do
+    IFS=',' read -r index uuid gpu_util memory_used memory_total name <<<"$gpu"
+    index=$(trim_field "$index")
+    name=$(trim_field "$name")
+    name=${name#\"}
+    name=${name%\"}
+    uuid=$(trim_field "$uuid")
+    gpu_util=$(trim_field "$gpu_util")
+    memory_used=$(trim_field "$memory_used")
+    memory_total=$(trim_field "$memory_total")
+    if [[ "$gpu_util" =~ ^[0-9]+$ ]]; then gpu_util_display="${gpu_util}%"; else gpu_util_display=$gpu_util; fi
+    if [[ "$memory_used" =~ ^[0-9]+$ && "$memory_total" =~ ^[0-9]+$ && "$memory_total" -gt 0 ]]; then
+      memory_percent=$((memory_used * 100 / memory_total))
+      memory_display="${memory_used}/${memory_total} MiB"
+      memory_percent="${memory_percent}%"
+    else
+      memory_display="${memory_used}/${memory_total}"
+      memory_percent='N/A'
+    fi
+    printf '  %-4s %-28.28s %-10s %-23s %-10s %s\n' "$index" "$name" "$gpu_util_display" "$memory_display" "$memory_percent" "$uuid"
+  done
   printf '%b[GPU 选择]%b 输入逗号分隔的 GPU 编号（如 0,2），a=全部 GPU，c=强制 CPU\n' "$UI_CYAN" "$UI_RESET"
-  local selection id found gpu gpu_index
+  local selection id found gpu_index
   selection=$(ask '请选择 GPU' 'a')
   if [[ "$selection" =~ ^[Aa]$ ]]; then
     cuda_value=''
