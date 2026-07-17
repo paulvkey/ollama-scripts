@@ -393,7 +393,6 @@ Environment="OLLAMA_MODELS=${model_path}"
 Environment="OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT}"
 Environment="OLLAMA_GPU=all"
 Environment="OLLAMA_VULKAN=false"
-Environment="OLLAMA_FLASH_ATTENTION=1"
 
 [Install]
 WantedBy=${wanted_target}
@@ -472,7 +471,7 @@ choose_gpu() {
   }
   printf '%b[GPU 实时状态]%b\n' "$UI_CYAN" "$UI_RESET"
   printf '  %-4s %-28s %-10s %-23s %-10s %s\n' '编号' '型号' 'GPU占用' '显存使用' '显存占用' 'UUID'
-  local gpu index name uuid gpu_util memory_used memory_total memory_percent gpu_util_display memory_display
+  local gpu index name uuid gpu_util memory_used memory_total memory_percent gpu_util_display memory_display gpu_zero_found=0
   for gpu in "${GPUS[@]}"; do
     IFS=',' read -r index uuid gpu_util memory_used memory_total name <<<"$gpu"
     index=$(trim_field "$index")
@@ -480,6 +479,7 @@ choose_gpu() {
     name=${name#\"}
     name=${name%\"}
     uuid=$(trim_field "$uuid")
+    [[ "$index" == '0' ]] && gpu_zero_found=1
     gpu_util=$(trim_field "$gpu_util")
     memory_used=$(trim_field "$memory_used")
     memory_total=$(trim_field "$memory_total")
@@ -494,9 +494,10 @@ choose_gpu() {
     fi
     printf '  %-4s %-28.28s %-10s %-23s %-10s %s\n' "$index" "$name" "$gpu_util_display" "$memory_display" "$memory_percent" "$uuid"
   done
-  printf '%b[GPU 选择]%b 输入逗号分隔的 GPU 编号（如 0,2），a=全部 GPU，c=强制 CPU\n' "$UI_CYAN" "$UI_RESET"
+  ((gpu_zero_found == 1)) || die '未检测到编号为 0 的 NVIDIA GPU，无法使用默认 GPU 0。'
+  printf '%b[GPU 选择]%b 默认使用 GPU 0；可输入逗号分隔的 GPU 编号（如 0,2），a=全部 GPU，c=强制 CPU\n' "$UI_CYAN" "$UI_RESET"
   local selection id found gpu_index
-  selection=$(ask '请选择 GPU' 'a')
+  selection=$(ask '请选择 GPU' '0')
   if [[ "$selection" =~ ^[Aa]$ ]]; then
     cuda_value=''
   elif [[ "$selection" =~ ^[Cc]$ ]]; then

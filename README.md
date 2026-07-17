@@ -150,7 +150,7 @@ loginctl show-user "$USER" -p Linger
 ollama_gpu_select
 ```
 
-支持输入逗号分隔的 GPU 编号、使用全部 GPU，或设置 `CUDA_VISIBLE_DEVICES=-1` 强制使用 CPU。
+默认选择 GPU 0；也支持输入逗号分隔的 GPU 编号、使用全部 GPU，或设置 `CUDA_VISIBLE_DEVICES=-1` 强制使用 CPU。如果未检测到编号为 0 的 NVIDIA GPU，GPU 选择会提示错误并退出。
 
 命令将 GPU 和并行数作为两个独立操作，启动后可以选择：
 
